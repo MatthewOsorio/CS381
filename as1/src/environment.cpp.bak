@@ -1,0 +1,78 @@
+#include "raylib-cpp.hpp"
+#include "rlgl.h"
+
+struct Skybox {
+    raylib::Texture texture;
+    raylib::Shader shader; 
+    raylib::Model cube;
+
+    Skybox(): shader(0) {}
+    void Init() {
+        auto gen = raylib::Mesh::Cube(1,1,1);
+        cube = ((raylib::Mesh*)(&gen)) ->LoadModelFrom();
+
+        //shader = raylib::Shader::LoadFromMemory( 
+        //    #include "generated/skybox.vs"
+        //    , 
+        //    #include "generated/skybox.fs"
+        //    );
+        cube.materials[0].shader= shader;
+        shader.SetValue("environmentMap", (int)MATERIAL_MAP_CUBEMAP, SHADER_UNIFORM_INT);
+    }
+
+    void Load(std::string filename){
+        shader.SetValue("doGamma",0, SHADER_UNIFORM_INT);
+        shader.SetValue("vflipped", 0, SHADER_UNIFORM_INT);
+
+        raylib::Image img(filename);
+        texture.Load(img, CUBEMAP_LAYOUT_AUTO_DETECT);
+        texture.Load(filename);
+        texture.SetFilter(TEXTURE_FILTER_BILINEAR);
+
+        cube.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = texture;
+    }
+
+    void Draw(){
+        rlDisableBackfaceCulling();
+        rlDisableDepthMask();
+        cube.Draw({});
+        rlEnableBackfaceCulling();
+        rlEnableDepthMask();
+    }
+};
+
+int main (){
+    raylib::Window window(800, 450, "CS381- Assingment 0");
+
+    raylib::Text text;
+    raylib::Model bad("bad.obj");
+    raylib::Camera camera(
+        //raylib::Vector3(0, 120, -500),
+        //raylib::Vector3(0, 0, 300),
+        raylib::Vector3(0, 120, -10),
+        raylib::Vector3(0, 0, 0),
+        raylib::Vector3::Up(),
+        45,
+        CAMERA_PERSPECTIVE
+    );
+
+    Skybox skybox;
+    skybox.Load("../textures/skybox/png");
+
+    raylib::Model defaultCube ("bad.obj");
+
+    while(!window.ShouldClose()){
+        window.BeginDrawing();
+
+        //window.ClearBackground(RAYWHITE);
+        //text.Draw("Hello Class", 0, 100, 20, raylib::Color::DarkPurple());
+
+        camera.BeginMode();
+        
+        defaultCube.Draw({0,50,0});
+        skybox.Draw();
+
+        camera.EndMode();
+        window.EndDrawing();
+    }
+}
