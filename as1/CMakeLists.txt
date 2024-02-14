@@ -8,8 +8,6 @@ add_executable(as1 ${sources})
 target_link_libraries(as1 PUBLIC raylib raylib_cpp)
 set_property(TARGET as1 PROPERTY CXX_STANDARD 20)
 
-configure_file(textures/skybox.png textures/skybox.png COPYONLY)
-
-include (includeable.cmake)
-make_includeable(raylib-cpp/raylib/examples/models/resources/shaders/glsl330/skybox.vs generated/skybox.vs)
-make_includeable(raylib-cpp/raylib/examples/models/resources/shaders/glsl330/skybox.fs generated/skybox.fs)
+configure_file(meshes/PolyPlane.glb meshes/PolyPlane.glb COPYONLY)
+configure_file(meshes/SmitHouston_Tug.glb meshes/SmitHouston_Tug.glb COPYONLY)
+configure_file(meshes/john_rambo.glb meshes/john_rambo.glb COPYONLY)
