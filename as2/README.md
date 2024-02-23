@@ -12,7 +12,13 @@ cmake ..
 make
 ./as2
 ```
-
+## Controls
+  W- plane moves away from camera
+  S- Plane moves towards camera
+  A- Plane moves left
+  D- Plane moves right
+  Q- Plane mvoes up
+  E- PLane moves down
 ## Questions
 5) No I don't think we can simplify the problem by having the camera be remapped to specific world axes because raylib uses a differnt coordinate system. Raylib has a left handing coordinate system whereas I believe in the real world we have a right handed coordinate system.
 
