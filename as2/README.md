@@ -5,13 +5,13 @@ Matthew Osorio
 ## How to run program
 Copy and make these commands;
 
-'''
+```
 mkdir build
 cd build
 cmake ..
 make
 ./as2
-'''
+```
 
 ## Questions
 5) No I don't think we can simplify the problem by having the camera be remapped to specific world axes because raylib uses a differnt coordinate system. Raylib has a left handing coordinate system whereas I believe in the real world we have a right handed coordinate system.
