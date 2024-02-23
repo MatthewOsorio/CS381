@@ -37,7 +37,7 @@ int main(){
     amongus.transform= raylib::Transform(amongus.transform).Scale(1,1,1);
     
     raylib::Model plane("meshes/PolyPlane.glb");
-
+    plane.transform= raylib::Transform(plane.transform).Scale(1,1,1);
     float speed= 5;
     raylib::Vector3 position = {0, 0, 0};
     raylib::Degree heading = 60;
@@ -68,33 +68,34 @@ int main(){
                 raylib::Vector3 velocity = {speed* cos(heading.RadianValue()), 0 , -speed *sin(heading.RadianValue())};
                 position += velocity * window.GetFrameTime();
             
-                if(IsKeyDown(KEY_W)){
-                    position.z +=1;
+                if(IsKeyPressed(KEY_W)){
+                    position.z += 1;
                     heading += 1;
+                    speed +=1;
                 }
-                if(IsKeyDown(KEY_S)){
+                if(IsKeyPressed(KEY_S)){
                     position.z -=1;
-                    heading += 1;
+                    heading -= 1;
+                    speed +=1;
                 }
-                //turn left
-                if(IsKeyDown(KEY_A)){
+                if(IsKeyPressed(KEY_A)){
                     position.x +=1;
                     heading += 1;
+                    speed +=1;
                 }
-                //turn right
-                if(IsKeyDown(KEY_D)){
+                if(IsKeyPressed(KEY_D)){
                     position.x -=1;
-                    heading += 1;
+                    heading -= 1;
+                    speed += 1;
                 }
-                if(IsKeyDown(KEY_Q)){
+                if(IsKeyPressed(KEY_Q)){
                     position.y +=1;
-                    heading += 1;
+                    speed += 1;
                 }
-                if(IsKeyDown(KEY_E)){
+                if(IsKeyPressed(KEY_E)){
                     position.y -=1;
-                    heading += 1;
+                    speed += 1;
                 }
-
 
             camera.EndMode();
         window.EndDrawing();
