@@ -38,7 +38,7 @@ int main(){
     
     raylib::Model plane("meshes/PolyPlane.glb");
     plane.transform= raylib::Transform(plane.transform).Scale(1,1,1);
-    float speed= 5;
+    float speed= 1;
     raylib::Vector3 position = {0, 0, 0};
     raylib::Degree heading = 60;
 
@@ -68,33 +68,30 @@ int main(){
                 raylib::Vector3 velocity = {speed* cos(heading.RadianValue()), 0 , -speed *sin(heading.RadianValue())};
                 position += velocity * window.GetFrameTime();
             
-                if(IsKeyPressed(KEY_W)){
+                if(IsKeyDown(KEY_W)){
                     position.z += 1;
                     heading += 1;
-                    speed +=1;
                 }
-                if(IsKeyPressed(KEY_S)){
+                if(IsKeyDown(KEY_S)){
                     position.z -=1;
                     heading -= 1;
-                    speed +=1;
                 }
-                if(IsKeyPressed(KEY_A)){
+                if(IsKeyDown(KEY_A)){
                     position.x +=1;
                     heading += 1;
-                    speed +=1;
                 }
-                if(IsKeyPressed(KEY_D)){
+                if(IsKeyDown(KEY_D)){
                     position.x -=1;
                     heading -= 1;
-                    speed += 1;
                 }
-                if(IsKeyPressed(KEY_Q)){
+                if(IsKeyDown(KEY_Q)){
                     position.y +=1;
-                    speed += 1;
                 }
-                if(IsKeyPressed(KEY_E)){
+                if(IsKeyDown(KEY_E)){
                     position.y -=1;
-                    speed += 1;
+                }
+                if(IsKeyDown(KEY_W) || IsKeyDown(KEY_S) || IsKeyDown(KEY_A) || IsKeyDown(KEY_D) || IsKeyDown(KEY_Q) |IsKeyDown(KEY_E)){
+                    speed++;
                 }
 
             camera.EndMode();
