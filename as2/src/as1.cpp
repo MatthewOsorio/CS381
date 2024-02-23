@@ -71,29 +71,34 @@ int main(){
                 if(IsKeyDown(KEY_W)){
                     position.z += 1;
                     heading += 1;
+                    speed++;
                 }
                 if(IsKeyDown(KEY_S)){
                     position.z -=1;
                     heading -= 1;
+                    speed++;
                 }
                 if(IsKeyDown(KEY_A)){
                     position.x +=1;
                     heading += 1;
+                    speed++;
                 }
                 if(IsKeyDown(KEY_D)){
                     position.x -=1;
                     heading -= 1;
+                    speed++;
                 }
                 if(IsKeyDown(KEY_Q)){
                     position.y +=1;
+                    speed++;
                 }
                 if(IsKeyDown(KEY_E)){
                     position.y -=1;
-                }
-                if(IsKeyDown(KEY_W) || IsKeyDown(KEY_S) || IsKeyDown(KEY_A) || IsKeyDown(KEY_D) || IsKeyDown(KEY_Q) |IsKeyDown(KEY_E)){
                     speed++;
                 }
-
+                if(IsKeyPressed(KEY_W)){
+                    speed++;
+                }
             camera.EndMode();
         window.EndDrawing();
     }
