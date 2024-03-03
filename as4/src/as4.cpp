@@ -114,6 +114,14 @@ int main(){
                     return t.Translate({250,0,0});
                 });  
 
+                //if left shift is down the acceleration becomes double
+                if(IsKeyDown(KEY_LEFT_SHIFT)){
+                    acceleration=40;
+                }
+                else
+                {
+                    acceleration=20;
+                }
                 //checkpoint 1 for boat, if boat reaches checkpoint draw among us character
                 if(boatPos.x > -300){
                     DrawBoundedModel(amongus, [](raylib::Transform t) -> raylib::Transform{

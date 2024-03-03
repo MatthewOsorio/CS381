@@ -11,9 +11,10 @@ You are a ship captain responible for transporting important cargo to the presid
   S- decrease the speed of the boat
   A- rotate the ship to the right
   D- rotate the ship to the left
+  Left Shift- Turn on NOS (acceleration is doubled)
 
 ## How to run program
-Copy and make these commands;
+Copy and make these commands:
 
 ```
 git submodule update --init --recursive
@@ -23,10 +24,3 @@ cmake ..
 make
 ./as3
 ```
-## Controls
-  W- plane moves away from camera
-  S- Plane moves towards camera
-  A- Plane moves left
-  D- Plane moves right
-  Q- Plane mvoes up
-  E- PLane moves down
