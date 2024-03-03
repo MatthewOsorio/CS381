@@ -22,11 +22,4 @@ cd build
 cmake ..
 make
 ./as3
-```
-## Controls
-  W- plane moves away from camera
-  S- Plane moves towards camera
-  A- Plane moves left
-  D- Plane moves right
-  Q- Plane mvoes up
-  E- PLane moves down
+``'
