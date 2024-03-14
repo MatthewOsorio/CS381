@@ -11,7 +11,7 @@ int main (){
     raylib:: Window window (300, 350, "CS381 - AS5");
     raylib::AudioDevice audio;
 
-    raylib::Music music("audio/price-of-freedom.mp3");
+    raylib::Music music("audio/nice_guys.mp3");
     PlayMusicStream(music);
 
     raylib::Sound ping("audio/ping.wav");
@@ -38,7 +38,7 @@ int main (){
 
         window.BeginDrawing();
         {
-            window.ClearBackground(raylib::Color::RayWhite());
+            window.ClearBackground(raylib::Color::Black());
             GuiVolumeControl(&guiState);
         }
         window.EndDrawing();
