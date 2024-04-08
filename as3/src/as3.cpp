@@ -125,7 +125,6 @@ int main(){
                         if(targetHeading3 < heading3){
                             heading3 -= acceleration * window.GetFrameTime();
                         }
-
                         if(IsKeyPressed(KEY_SPACE)){
                             targetSpeed3=0;
                         }

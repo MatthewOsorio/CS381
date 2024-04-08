@@ -15,6 +15,7 @@ int main (){
     PlayMusicStream(music);
 
     raylib::Sound ping("audio/ping.wav");
+    
     PingButton += [&ping](){
         ping.Play();
     };
