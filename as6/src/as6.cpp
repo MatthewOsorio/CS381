@@ -1,9 +1,13 @@
+// Matthew Osorio
+// AS6
+// April 12, 2024
+
 #include "raylib-cpp.hpp"
-#include <memory>
-#include <iostream>
-#include "delegate.hpp"
-#include <BufferedInput.hpp>
 #include "skybox.hpp"
+#include "delegate.hpp"
+#include <iostream>
+#include <memory>
+#include <BufferedInput.hpp>
 #include <vector>
 
 cs381::Delegate<void()> Forward;
@@ -11,7 +15,7 @@ cs381::Delegate<void()> Back;
 cs381::Delegate<void()> Right;
 cs381::Delegate<void()> Left;
 
-enum entities{e1, e2, e3, e4, e5, e6, e7, e8, e9, e10};
+enum entities{e0, e1, e2, e3, e4, e5, e6, e7, e8, e9};
 
 struct Component {
     struct Entity* object;
@@ -27,6 +31,10 @@ struct TransformComponent: public Component {
     using Component::Component;
     raylib::Vector3 position = {0,0,0};
     raylib::Quaternion rotation = raylib::Quaternion::Identity();
+
+    void updatePosition (raylib::Vector3 newPosition) {
+        position = newPosition;
+    }
 };
 
 struct Entity{
@@ -36,45 +44,56 @@ struct Entity{
     Entity(const Entity&) = delete;
     Entity(Entity&& other) : components(std::move(other.components)) {
         for(auto& c: components)
-            c->object = this; 
+        c->object = this; 
     }
 
-   template <std::derived_from<Component> T, typename... Ts>
-   size_t AddComponent(Ts... args) {
-        auto c = std::make_unique<T>(*this, std::forward<Ts>(args)...);
+    template <std::derived_from<Component> T, typename... Ts>
+    size_t AddComponent(Ts... args) {
+        std::unique_ptr<Component> c = std::make_unique<T>(*this, std::forward<Ts>(args)...);
         components.push_back(std::move(c));
         return components.size() -1;
-   }
-    
+    }
+
     template<std:: derived_from<Component> T>
     std::optional<std::reference_wrapper<T>> GetComponent () {
         if constexpr(std::is_same_v<T,TransformComponent>){
-            T* cast = dynamic_cast<T*>(components[0].get());
-            if(cast) return *cast;
-        }
-        for(auto & c: components) {
-            T* cast = dynamic_cast<T*>(c.get());
-            if(cast) return *cast;
-        }
-
-        return std::nullopt;
+        T* cast = dynamic_cast<T*>(components[0].get());
+        if(cast) return *cast;
     }
 
-   void tick(float dt) {
-        for(auto& c: components)
-            c->tick(dt);
-   }
-};
-struct PhysicsComponent: public Component {
-    int acceleration, turningacceleration, speed, targetSpeed;
-    raylib::Degree heading;
-    raylib::Degree targetHeading;
+    for(auto & c: components) {
+        T* cast = dynamic_cast<T*>(c.get());
+        if(cast) return *cast;
+    }
+        return {};
+    }
 
-    PhysicsComponent(Entity& e, int ac, int tc): Component(e), acceleration(std::move(ac)), turningacceleration(std::move(tc)) {
-        speed=0;
-        targetSpeed=0;
-        heading=0;
-        targetHeading=0;
+    void tick(float dt) {
+        for(auto& c: components)
+        c->tick(dt);
+    }
+
+    void setup() {
+        for(auto& c: components)
+        c->setup();
+    }
+
+    //Got from Josh's file
+    TransformComponent& Transform() { return *GetComponent<TransformComponent>(); }
+};
+
+struct PhysicsComponent: public Component {
+    int acceleration, turningacceleration, maxSpeed, speed, targetSpeed;
+    raylib::Degree heading, targetHeading;
+
+    PhysicsComponent(Entity& e, int ac, int tc, int ms): Component(e), acceleration(std::move(ac)), turningacceleration(std::move(tc)), maxSpeed(std::move(ms)) {}
+
+    void setup () override{
+        speed= 0;
+        targetSpeed= 0;
+        heading= 0;
+        targetHeading= 0;
+        std::cout << "test" << std::endl;
     }
 
     void tick(float dt) override {
@@ -83,7 +102,7 @@ struct PhysicsComponent: public Component {
         auto& transform = ref -> get(); 
 
         raylib::Vector3 velocity = {speed* cos(heading.RadianValue()), 0 , -speed *sin(heading.RadianValue())};
-        transform.position += velocity * dt;
+        transform.updatePosition((transform.position + velocity * dt));
 
         if(targetSpeed > speed){
             speed += acceleration * dt;
@@ -98,28 +117,30 @@ struct PhysicsComponent: public Component {
             heading -= turningacceleration * dt;
         }
     }
+
+    void updateSpeed(int newSpeed){
+        targetSpeed = newSpeed;
+    }
 };
 
 struct InputComponent: public Component {
-    raylib::BufferedInput input;
     bool selected;
+    raylib::BufferedInput inputs;
 
     InputComponent(Entity&e): Component(e) { }
 
     void setup() override{
-        auto ref = object->GetComponent<PhysicsComponent>();
-        if(!ref) return;
-        auto& physics = ref -> get();
-        int speed = physics.targetSpeed;
 
-        input["forward"] = raylib::Action::key(KEY_SPACE).SetPressedCallback([]{
-        
+        inputs["forward"] = raylib::Action::key(KEY_W).AddPressedCallback([]{
+            Forward();
         }).move();
     }
 };
 
 struct RenderingComponent: public Component {
     raylib::Model model;
+    raylib::Vector3 scale {1.0f, 1.0f, 1.0f};
+    bool selected;
 
     RenderingComponent(Entity& e, raylib::Model&& model): Component(e), model(std::move(model)) {}
 
@@ -128,386 +149,259 @@ struct RenderingComponent: public Component {
         if(!ref) return;
         auto& transform = ref -> get();
 
-        auto ref2 = object->GetComponent<InputComponent>();
-        if(!ref2) return;
-        auto& s = ref2 -> get();
-
-        auto [axis, angle] = transform.rotation.ToAxisAngle();
-        model.Draw(transform.position, axis, angle);
-
-        if(s.selected){
-            auto [axis, angle] = transform.rotation.ToAxisAngle();
-            model.Draw(transform.position, axis, angle);
+        auto[axis, angle] = transform.rotation.ToAxisAngle();
+      
+        if(selected){
+            model.Draw(transform.position, axis, angle, scale);
             model.GetTransformedBoundingBox().Draw();
         }
-
+        else{
+            model.Draw(transform.position, axis, angle, scale);
+        }
     }
 };
 
 int main () {
-    raylib:: Window window (800, 450, "CS381 - AS6");
-    std::vector<Entity> entities;  
-    raylib::BufferedInput inputs;
-
-    Entity& plane1= entities.emplace_back();
-    plane1.AddComponent<RenderingComponent>(raylib::Model ("meshes/PolyPlane.glb"));
-    plane1.AddComponent<PhysicsComponent>(20,20);
-    plane1.AddComponent<InputComponent>();
-
-    Entity& plane2= entities.emplace_back();
-    plane1.AddComponent<RenderingComponent>(raylib::Model ("meshes/PolyPlane.glb"));
-    plane1.AddComponent<PhysicsComponent>(20,20);
-    plane1.AddComponent<InputComponent>();
-
-    Entity& plane3= entities.emplace_back();
-    plane1.AddComponent<RenderingComponent>(raylib::Model ("meshes/PolyPlane.glb"));
-    plane1.AddComponent<PhysicsComponent>(20,20);
-    plane1.AddComponent<InputComponent>();
-
-    Entity& plane4= entities.emplace_back();
-    plane1.AddComponent<RenderingComponent>(raylib::Model ("meshes/PolyPlane.glb"));
-    plane1.AddComponent<PhysicsComponent>(20,20);
-    plane1.AddComponent<InputComponent>();
-    
-    Entity& plane5= entities.emplace_back();
-    plane1.AddComponent<RenderingComponent>(raylib::Model ("meshes/PolyPlane.glb"));
-    plane1.AddComponent<PhysicsComponent>(20,20);
-    plane1.AddComponent<InputComponent>();
-
-    Entity& ship1 = entities.emplace_back();
-    ship1.AddComponent<RenderingComponent>(raylib::Model ("meshes/SmitHouston_Tug.glb"));
-    ship1.AddComponent<PhysicsComponent>(3, 3);
-    ship1.AddComponent<InputComponent>();
-
-    Entity& ship2 = entities.emplace_back();
-    ship2.AddComponent<RenderingComponent>(raylib::Model ("meshes/OrientExplorer.glb"));
-    ship2.AddComponent<PhysicsComponent>(6, 6);
-    ship2.AddComponent<InputComponent>();
-
-    Entity& ship3 = entities.emplace_back();
-    ship3.AddComponent<RenderingComponent>(raylib::Model ("meshes/ddg51.glb"));
-    ship3.AddComponent<PhysicsComponent>(1,1);
-    ship3.AddComponent<InputComponent>();
-
-    Entity& ship4 = entities.emplace_back();
-    ship4.AddComponent<RenderingComponent>(raylib::Model ("meshes/Container_ShipLarge.glb"));
-    ship4.AddComponent<PhysicsComponent>(8 ,8);
-    ship4.AddComponent<InputComponent>();
-
-    Entity& ship5 = entities.emplace_back();
-    ship4.AddComponent<RenderingComponent>(raylib::Model ("meshes/CargoG_HOSBrigadoon.glb"));
-    ship4.AddComponent<PhysicsComponent>(2 ,2);
-    ship4.AddComponent<InputComponent>();
+    raylib:: Window window (1200, 900, "CS381 - AS6");
     
     raylib::Camera camera(
         raylib::Vector3(0, 120, -500),
         raylib::Vector3(0, 0, 300),
         raylib::Vector3::Up(),
-        45,
+        45.0f,
         CAMERA_PERSPECTIVE
     );
 
     cs381::SkyBox skybox("textures/skybox.png");
-
     auto mesh = raylib::Mesh::Plane(10'000, 10'000, 50, 50,25);
     raylib::Model ground = ((raylib::Mesh*)&mesh) -> LoadModelFrom();
     raylib::Texture water("textures/water.jpeg");
     water.SetFilter(TEXTURE_FILTER_BILINEAR);
     water.SetWrap(TEXTURE_WRAP_REPEAT);
     ground.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = water;
-    
-    int counter=0;
 
+    std::vector<Entity> entities;  
+
+    Entity& ship0= entities.emplace_back();
+    ship0.AddComponent<RenderingComponent>(raylib::Model ("meshes/SmitHouston_Tug.glb"));
+    ship0.Transform().updatePosition(raylib::Vector3 {150, 0, 0});
+    ship0.AddComponent<PhysicsComponent>(12, 12, 30);
+    ship0.AddComponent<InputComponent>();
+
+    Entity& ship1= entities.emplace_back();
+    ship1.AddComponent<RenderingComponent>(raylib::Model ("meshes/boat.glb"));
+    ship1.Transform().updatePosition(raylib::Vector3 {75, 10, 0});
+    ship1.GetComponent<RenderingComponent>()->get().scale = raylib::Vector3 {5.0, 5.0, 5.0};
+    ship1.AddComponent<PhysicsComponent>(15 , 15, 45);
+    ship1.AddComponent<InputComponent>();
+
+    Entity& ship2= entities.emplace_back();
+    ship2.AddComponent<RenderingComponent>(raylib::Model ("meshes/ddg51.glb"));
+    ship2.Transform().updatePosition(raylib::Vector3 {-75, 0, 0});
+    ship2.AddComponent<PhysicsComponent>(10 , 10 , 20);
+    ship2.AddComponent<InputComponent>();
+
+    Entity& ship3= entities.emplace_back();
+    ship3.AddComponent<RenderingComponent>(raylib::Model ("meshes/u-_boat.glb"));
+    ship3.Transform().updatePosition(raylib::Vector3 {-150, 50, 0});
+    ship3.GetComponent<RenderingComponent>()->get().scale = raylib::Vector3 {-3.0, -3.0, -3.0};
+    ship3.AddComponent<PhysicsComponent>(7, 7, 10);
+    ship3.AddComponent<InputComponent>();
+
+    Entity& ship4= entities.emplace_back();
+    ship4.AddComponent<RenderingComponent>(raylib::Model ("meshes/boat2.glb"));
+    ship4.AddComponent<PhysicsComponent>(4 ,4 , 8);
+    ship4.AddComponent<InputComponent>();
+
+    Entity& plane0= entities.emplace_back();
+    plane0.Transform().updatePosition(raylib::Vector3 {0 ,50, 0});
+    plane0.AddComponent<RenderingComponent>(raylib::Model ("meshes/PolyPlane.glb"));
+    plane0.AddComponent<PhysicsComponent>(10, 10, 20);
+    plane0.AddComponent<InputComponent>();
+
+    Entity& plane1= entities.emplace_back();
+    plane1.Transform().updatePosition(raylib::Vector3 {150 ,50, 0});
+    plane1.AddComponent<RenderingComponent>(raylib::Model ("meshes/PolyPlane.glb"));
+    plane1.AddComponent<PhysicsComponent>(10, 10, 20);
+    plane1.AddComponent<InputComponent>();
+
+    Entity& plane2= entities.emplace_back();
+    plane2.Transform().updatePosition(raylib::Vector3 {75 ,50, 0});
+    plane2.AddComponent<RenderingComponent>(raylib::Model ("meshes/PolyPlane.glb"));
+    plane2.AddComponent<PhysicsComponent>(10, 10, 20);
+    plane2.AddComponent<InputComponent>();
+
+    Entity& plane3= entities.emplace_back();
+    plane3.Transform().updatePosition(raylib::Vector3 {-75 ,50, 0});
+    plane3.AddComponent<RenderingComponent>(raylib::Model ("meshes/PolyPlane.glb"));
+    plane3.AddComponent<PhysicsComponent>(10, 10, 20);
+    plane3.AddComponent<InputComponent>();
+
+    Entity& plane4= entities.emplace_back();
+    plane4.Transform().updatePosition(raylib::Vector3 {-150 ,50, 0});
+    plane4.AddComponent<RenderingComponent>(raylib::Model ("meshes/PolyPlane.glb"));
+    plane4.AddComponent<PhysicsComponent>(10, 10, 20);
+    plane4.AddComponent<InputComponent>();
+    
+    
+    for(Entity& e: entities) e.setup();
+    /*
+    Forward += [&entities](){
+        for(Entity& e :entities){
+            e.GetComponent<PhysicsComponent>()->get().targetSpeed += 10;
+        }
+    };
+
+    Forward += [](){
+        std::cout<<"forward"<<std::endl;
+    };
+    */
+    int counter=0;
     while(!window.ShouldClose()){
-        inputs.PollEvents();
-        for(Entity& e: entities) e.tick(window.GetFrameTime());
-        window.ClearBackground(raylib::Color::Black());
+        //plane0.GetComponent<InputComponent>()->get().inputs.PollEvents();
 
         if(IsKeyPressed(KEY_TAB)){
             counter++;
         }
 
         window.BeginDrawing();
-        camera.BeginMode();
+            window.ClearBackground(BLACK);
+            camera.BeginMode();
+                skybox.Draw();
+                ground.Draw({0,0,0});
 
-        skybox.Draw();
-        ground.Draw({0,0,0});
+                for(Entity& e: entities) e.tick(window.GetFrameTime());
 
-        switch(counter % 10){
+                        switch((counter % 10)){
+            case e0:
+                entities[e0].GetComponent<RenderingComponent>()->get().selected = true;
+                entities[e1].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e2].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e3].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e4].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e5].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e6].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e7].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e8].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e9].GetComponent<RenderingComponent>()->get().selected = false;
+                break;
             case e1:
-                auto temp = entities[e1].GetComponent<InputComponent>();
-                auto& inputE = temp -> get();
-
-                auto temp2 = entities[e1].GetComponent<PhysicsComponent>();
-                auto& physicsE = temp2 -> get();
-
-                inputE.selected = true;
-                int targetSpeedE1= physicsE.targetSpeed;
-                int targetHeadingE1 = physicsE.targetHeading;
-
-                Forward += [&targetSpeedE1](){
-                    targetSpeedE1 += 10;
-                };
-
-                Back += [&targetSpeedE1](){
-                    targetSpeedE1 -= 10;
-                };
-
-                Right += [&targetHeadingE1](){
-                    targetHeadingE1 -= 10;
-                };
-
-                Left += [&targetHeadingE1](){
-                    targetHeadingE1 += 10;
-                };
-
-                physicsE.targetSpeed = targetSpeedE1;
-                physicsE.targetHeading = targetHeadingE1;
-
+                entities[e0].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e1].GetComponent<RenderingComponent>()->get().selected = true;
+                entities[e2].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e3].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e4].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e5].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e6].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e7].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e8].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e9].GetComponent<RenderingComponent>()->get().selected = false;
                 break;
             case e2:
-                auto temp3 = entities[e2].GetComponent<InputComponent>();
-                auto& inputE2 = temp3 -> get();
-
-                auto temp4 = entities[e2].GetComponent<PhysicsComponent>();
-                auto& physicsE2 = temp4 -> get();
-
-                inputE2.selected = true;
-                int targetSpeedE2= physicsE2.targetSpeed;
-                int targetHeadingE2 = physicsE2.targetHeading;
-
-                Forward += [&targetSpeedE2](){
-                    targetSpeedE2 += 10;
-                };
-
-                Back += [&targetSpeedE2](){
-                    targetSpeedE2 -= 10;
-                };
-
-                Right += [&targetHeadingE2](){
-                    targetHeadingE2 -= 10;
-                };
-
-                Left += [&targetHeadingE2](){
-                    targetHeadingE2 += 10;
-                };
-
-                physicsE2.targetSpeed = targetSpeedE2;
-                physicsE2.targetHeading = targetHeadingE2;
+                entities[e0].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e1].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e2].GetComponent<RenderingComponent>()->get().selected = true;
+                entities[e3].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e4].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e5].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e6].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e7].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e8].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e9].GetComponent<RenderingComponent>()->get().selected = false;
                 break;
             case e3:
-                auto temp5 = entities[e3].GetComponent<InputComponent>();
-                auto& inputE3 = temp5 -> get();
-
-                auto temp6 = entities[e3].GetComponent<PhysicsComponent>();
-                auto& physicsE3 = temp6 -> get();
-
-                inputE3.selected = true;
-                int targetSpeedE3= physicsE3.targetSpeed;
-                int targetHeadingE3 = physicsE3.targetHeading;
-
-                Forward += [&targetSpeedE3](){
-                    targetSpeedE3 += 10;
-                };
-
-                Back += [&targetSpeedE3](){
-                    targetSpeedE3 -= 10;
-                };
-
-                Right += [&targetHeadingE3](){
-                    targetHeadingE3 -= 10;
-                };
-
-                Left += [&targetHeadingE3](){
-                    targetHeadingE3 += 10;
-                };
-
-                physicsE3.targetSpeed = targetSpeedE3;
-                physicsE3.targetHeading = targetHeadingE3;
+                entities[e0].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e1].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e2].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e3].GetComponent<RenderingComponent>()->get().selected = true;
+                entities[e4].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e5].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e6].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e7].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e8].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e9].GetComponent<RenderingComponent>()->get().selected = false;
                 break;
             case e4:
-                auto temp7 = entities[e4].GetComponent<InputComponent>();
-                auto& inputE4 = temp7 -> get();
-
-                auto temp8 = entities[e4].GetComponent<PhysicsComponent>();
-                auto& physicsE4 = temp8 -> get();
-
-                inputE4.selected = true;
-                int targetSpeedE4= physicsE4.targetSpeed;
-                int targetHeadingE4 = physicsE4.targetHeading;
-
-                Forward += [&targetSpeedE4](){
-                    targetSpeedE4 += 10;
-                };
-
-                Back += [&targetSpeedE4](){
-                    targetSpeedE4 -= 10;
-                };
-
-                Right += [&targetHeadingE4](){
-                    targetHeadingE4 -= 10;
-                };
-
-                Left += [&targetHeadingE4](){
-                    targetHeadingE4 += 10;
-                };
-
-                physicsE4.targetSpeed = targetSpeedE4;
-                physicsE4.targetHeading = targetHeadingE4;
-
+                entities[e0].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e1].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e2].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e3].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e4].GetComponent<RenderingComponent>()->get().selected = true;
+                entities[e5].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e6].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e7].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e8].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e9].GetComponent<RenderingComponent>()->get().selected = false;
                 break;
             case e5:
-                auto temp9 = entities[e5].GetComponent<InputComponent>();
-                auto& inputE5 = temp9 -> get();
-
-                auto temp10 = entities[e5].GetComponent<PhysicsComponent>();
-                auto& physicsE5 = temp10 -> get();
-
-                inputE5.selected = true;
-                int targetSpeedE5= physicsE5.targetSpeed;
-                int targetHeadingE5 = physicsE5.targetHeading;
-
-                Forward += [&targetSpeedE5](){
-                    targetSpeedE5 += 10;
-                };
-
-                Back += [&targetSpeedE5](){
-                    targetSpeedE5 -= 10;
-                };
-
-                Right += [&targetHeadingE5](){
-                    targetHeadingE5 -= 10;
-                };
-
-                Left += [&targetHeadingE5](){
-                    targetHeadingE5 += 10;
-                };
-
-                physicsE5.targetSpeed = targetSpeedE5;
-                physicsE5.targetHeading = targetHeadingE5;
+                entities[e0].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e1].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e2].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e3].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e4].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e5].GetComponent<RenderingComponent>()->get().selected = true;
+                entities[e6].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e7].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e8].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e9].GetComponent<RenderingComponent>()->get().selected = false;
                 break;
             case e6:
-                auto temp12 = entities[e6].GetComponent<InputComponent>();
-                auto& inputE6 = temp12 -> get();
-
-                auto temp13 = entities[e6].GetComponent<PhysicsComponent>();
-                auto& physicsE6 = temp13 -> get();
-
-                inputE6.selected = true;
-                int targetSpeedE6= physicsE6.targetSpeed;
-                int targetHeadingE6 = physicsE6.targetHeading;
-
-                Forward += [&targetSpeedE6](){
-                    targetSpeedE6 += 10;
-                };
-
-                Back += [&targetSpeedE6](){
-                    targetSpeedE6 -= 10;
-                };
-
-                Right += [&targetHeadingE6](){
-                    targetHeadingE6 -= 10;
-                };
-
-                Left += [&targetHeadingE6](){
-                    targetHeadingE6 += 10;
-                };
-
-                physicsE6.targetSpeed = targetSpeedE6;
-                physicsE6.targetHeading = targetHeadingE6;
+                entities[e0].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e1].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e2].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e3].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e4].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e5].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e6].GetComponent<RenderingComponent>()->get().selected = true;
+                entities[e7].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e8].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e9].GetComponent<RenderingComponent>()->get().selected = false;
+                break;
             case e7:
-                auto temp14 = entities[e7].GetComponent<InputComponent>();
-                auto& inputE7 = temp14 -> get();
-
-                auto temp15 = entities[e7].GetComponent<PhysicsComponent>();
-                auto& physicsE7 = temp15 -> get();
-
-                inputE7.selected = true;
-                int targetSpeedE7= physicsE7.targetSpeed;
-                int targetHeadingE7 = physicsE7.targetHeading;
-
-                Forward += [&targetSpeedE7](){
-                    targetSpeedE7 += 10;
-                };
-
-                Back += [&targetSpeedE7](){
-                    targetSpeedE7 -= 10;
-                };
-
-                Right += [&targetHeadingE7](){
-                    targetHeadingE7 -= 10;
-                };
-
-                Left += [&targetHeadingE7](){
-                    targetHeadingE7 += 10;
-                };
-
-                physicsE7.targetSpeed = targetSpeedE7;
-                physicsE7.targetHeading = targetHeadingE7;
+                entities[e0].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e1].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e2].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e3].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e4].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e5].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e6].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e7].GetComponent<RenderingComponent>()->get().selected = true;
+                entities[e8].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e9].GetComponent<RenderingComponent>()->get().selected = false;
                 break;
             case e8:
-                auto temp16 = entities[e8].GetComponent<InputComponent>();
-                auto& inputE8 = temp16 -> get();
-
-                auto temp17 = entities[e8].GetComponent<PhysicsComponent>();
-                auto& physicsE8 = temp17 -> get();
-
-                inputE8.selected = true;
-                int targetSpeedE8= physicsE8.targetSpeed;
-                int targetHeadingE8 = physicsE8.targetHeading;
-
-                Forward += [&targetSpeedE8](){
-                    targetSpeedE8 += 10;
-                };
-
-                Back += [&targetSpeedE8](){
-                    targetSpeedE8 -= 10;
-                };
-
-                Right += [&targetHeadingE8](){
-                    targetHeadingE8 -= 10;
-                };
-
-                Left += [&targetHeadingE8](){
-                    targetHeadingE8 += 10;
-                };
-
-                physicsE8.targetSpeed = targetSpeedE8;
-                physicsE8.targetHeading = targetHeadingE8;
+                entities[e0].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e1].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e2].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e3].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e4].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e5].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e6].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e7].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e8].GetComponent<RenderingComponent>()->get().selected = true;
+                entities[e9].GetComponent<RenderingComponent>()->get().selected = false;
                 break;
             case e9:
-                auto temp18 = entities[e9].GetComponent<InputComponent>();
-                auto& inputE9 = temp -> get();
+                entities[e0].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e1].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e2].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e3].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e4].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e5].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e6].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e7].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e8].GetComponent<RenderingComponent>()->get().selected = false;
+                entities[e9].GetComponent<RenderingComponent>()->get().selected = true;
+                break;
 
-                auto temp19 = entities[e9].GetComponent<PhysicsComponent>();
-                auto& physicsE9 = temp19 -> get();
-
-                inputE9.selected = true;
-                int targetSpeedE9= physicsE9.targetSpeed;
-                int targetHeadingE9 = physicsE9.targetHeading;
-
-                Forward += [&targetSpeedE9](){
-                    targetSpeedE9 += 10;
-                };
-
-                Back += [&targetSpeedE9](){
-                    targetSpeedE9 -= 10;
-                };
-
-                Right += [&targetHeadingE9](){
-                    targetHeadingE9 -= 10;
-                };
-
-                Left += [&targetHeadingE9](){
-                    targetHeadingE9 += 10;
-                };
-
-                physicsE9.targetSpeed = targetSpeedE9;
-                physicsE9.targetHeading = targetHeadingE9;
-
+            default:
                 break;
         }
 
+
+
+            camera.EndMode();
+        window.EndDrawing();
     }
     return 0;
 }

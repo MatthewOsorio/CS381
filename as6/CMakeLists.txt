@@ -10,10 +10,10 @@ set_property(TARGET as6 PROPERTY CXX_STANDARD 20)
 
 configure_file(meshes/PolyPlane.glb meshes/PolyPlane.glb COPYONLY)
 configure_file(meshes/SmitHouston_Tug.glb meshes/SmitHouston_Tug.glb COPYONLY)
-configure_file(meshes/CargoG_HOSBrigadoon.glb meshes/CargoG_HOSBrigadoon.glb COPYONLY)
-configure_file(meshes/Container_ShipLarge.glb meshes/Container_ShipLarge.glb COPYONLY)
+configure_file(meshes/boat.glb meshes/boat.glb COPYONLY)
 configure_file(meshes/ddg51.glb meshes/ddg51.glb COPYONLY)
-configure_file(meshes/OrientExplorer.glb meshes/OrientExplorer.glb COPYONLY)
+configure_file(meshes/u-_boat.glb meshes/u-_boat.glb COPYONLY)
+configure_file(meshes/boat2.glb meshes/boat2.glb COPYONLY)
 configure_file(textures/water.jpeg textures/water.jpeg COPYONLY)
 configure_file(textures/skybox.png textures/skybox.png COPYONLY)
 

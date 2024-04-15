@@ -24,6 +24,7 @@ int main (){
     PlaySound(crowd);
 
     raylib::BufferedInput inputs;
+    
     inputs["ping"] = raylib::Action::key(KEY_SPACE).SetPressedCallback([]{
         PingButton();
     }).move();
