@@ -142,7 +142,7 @@ struct RenderingComponent: public Component {
     raylib::Vector3 scale {1.0f, 1.0f, 1.0f};
     bool selected;
 
-    RenderingComponent(Entity& e, raylib::Model&& model): Component(e), model(std::move(model)) {}
+    RenderingComponent(Entity& e, raylib::Model&& m): Component(e), model(std::move(m)) {}
 
     void tick(float dt) override {
         auto ref = object->GetComponent<TransformComponent>();
@@ -151,13 +151,7 @@ struct RenderingComponent: public Component {
 
         auto[axis, angle] = transform.rotation.ToAxisAngle();
       
-        if(selected){
-            model.Draw(transform.position, axis, angle, scale);
-            model.GetTransformedBoundingBox().Draw();
-        }
-        else{
-            model.Draw(transform.position, axis, angle, scale);
-        }
+        model.Draw(transform.position, axis, angle, scale);
     }
 };
 
@@ -185,25 +179,27 @@ int main () {
     Entity& ship0= entities.emplace_back();
     ship0.AddComponent<RenderingComponent>(raylib::Model ("meshes/SmitHouston_Tug.glb"));
     ship0.Transform().updatePosition(raylib::Vector3 {150, 0, 0});
+    ship0.Transform().rotation.Slerp(raylib::Quaternion {0.59, 0, 0.2, 1.0}, 1.2);
     ship0.AddComponent<PhysicsComponent>(12, 12, 30);
     ship0.AddComponent<InputComponent>();
 
     Entity& ship1= entities.emplace_back();
-    ship1.AddComponent<RenderingComponent>(raylib::Model ("meshes/boat.glb"));
-    ship1.Transform().updatePosition(raylib::Vector3 {75, 10, 0});
-    ship1.GetComponent<RenderingComponent>()->get().scale = raylib::Vector3 {5.0, 5.0, 5.0};
+    ship1.AddComponent<RenderingComponent>(raylib::Model ("meshes/Container_ShipLarge.glb"));
+    ship1.Transform().updatePosition(raylib::Vector3 {-150, 10, 0});
+    ship1.GetComponent<RenderingComponent>()->get().scale = raylib::Vector3 {0.01, 0.01, 0.01};
     ship1.AddComponent<PhysicsComponent>(15 , 15, 45);
     ship1.AddComponent<InputComponent>();
 
+    /*
     Entity& ship2= entities.emplace_back();
     ship2.AddComponent<RenderingComponent>(raylib::Model ("meshes/ddg51.glb"));
-    ship2.Transform().updatePosition(raylib::Vector3 {-75, 0, 0});
+    ship2.Transform().updatePosition(raylib::Vector3 {75, 0, 0});
     ship2.AddComponent<PhysicsComponent>(10 , 10 , 20);
     ship2.AddComponent<InputComponent>();
 
     Entity& ship3= entities.emplace_back();
     ship3.AddComponent<RenderingComponent>(raylib::Model ("meshes/u-_boat.glb"));
-    ship3.Transform().updatePosition(raylib::Vector3 {-150, 50, 0});
+    ship3.Transform().updatePosition(raylib::Vector3 {-75, 50, 0});
     ship3.GetComponent<RenderingComponent>()->get().scale = raylib::Vector3 {-3.0, -3.0, -3.0};
     ship3.AddComponent<PhysicsComponent>(7, 7, 10);
     ship3.AddComponent<InputComponent>();
@@ -243,7 +239,14 @@ int main () {
     plane4.AddComponent<PhysicsComponent>(10, 10, 20);
     plane4.AddComponent<InputComponent>();
     
-    
+    */
+    raylib::Model plane("meshes/PolyPlane.glb");
+    Entity& plane0= entities.emplace_back();
+    plane0.AddComponent<RenderingComponent>(&plane);
+    plane0.AddComponent<PhysicsComponent>(10, 10, 20);
+    plane0.AddComponent<InputComponent>();
+
+
     for(Entity& e: entities) e.setup();
     /*
     Forward += [&entities](){
@@ -397,8 +400,6 @@ int main () {
             default:
                 break;
         }
-
-
 
             camera.EndMode();
         window.EndDrawing();
