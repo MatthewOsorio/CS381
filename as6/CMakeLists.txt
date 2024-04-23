@@ -16,6 +16,8 @@ configure_file(meshes/Container_ShipLarge.glb meshes/Container_ShipLarge.glb COP
 configure_file(meshes/boat2.glb meshes/boat2.glb COPYONLY)
 configure_file(textures/water.jpeg textures/water.jpeg COPYONLY)
 configure_file(textures/skybox.png textures/skybox.png COPYONLY)
+configure_file(audio/HowlingWind.mp3  audio/HowlingWind.mp3 COPYONLY)
+
 
 include(includeable.cmake)
 
