@@ -207,7 +207,7 @@ int main () {
     );
 
     raylib::AudioDevice audio;
-    raylib::Music wind("audio/HowlingWind.mp3");
+    raylib::Music wind("audio/windsound.mp3");
     PlayMusicStream(wind);
 
     raylib::BufferedInput inputs;
