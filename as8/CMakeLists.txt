@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(as6 LANGUAGES CXX)
+project(as8 LANGUAGES CXX)
 
 add_subdirectory(raylib-cpp)
 
@@ -11,13 +11,10 @@ set_property(TARGET as8 PROPERTY CXX_STANDARD 20)
 configure_file(meshes/PolyPlane.glb meshes/PolyPlane.glb COPYONLY)
 configure_file(meshes/SmitHouston_Tug.glb meshes/SmitHouston_Tug.glb COPYONLY)
 configure_file(meshes/boat.glb meshes/boat.glb COPYONLY)
-configure_file(meshes/ddg51.glb meshes/ddg51.glb COPYONLY)
 configure_file(meshes/Container_ShipLarge.glb meshes/Container_ShipLarge.glb COPYONLY)
-configure_file(meshes/boat2.glb meshes/boat2.glb COPYONLY)
-configure_file(textures/grass.jpg textures/grass.jpg COPYONLY)
+configure_file(meshes/u-_boat.glb meshes/u-_boat.glb COPYONLY) 
+configure_file(textures/water.jpeg textures/water.jpeg COPYONLY)
 configure_file(textures/skybox.png textures/skybox.png COPYONLY)
-configure_file(textures/skybox.png textures/skybox.png COPYONLY)
-
 
 include(includeable.cmake)
 

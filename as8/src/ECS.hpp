@@ -27,7 +27,7 @@ namespace cs381 {
 		std::vector<std::byte> data;
 
 		ComponentStorage() : elementSize(-1), data(1, std::byte{0}) {}
-		ComponentStorage(size_t elementSize) : elementSize(elementSize) { data.reserve(5 * elementSize); }
+		ComponentStorage(size_t elementSize) : elementSize(elementSize) { data.reserve(10 * elementSize); }
 		
 		template<typename Tcomponent>
 		ComponentStorage(Tcomponent reference = {}) : ComponentStorage(sizeof(Tcomponent)) {}
@@ -168,7 +168,6 @@ namespace cs381 {
 			return Get<Tcomponent>(e);
 		}
 	};
-
 
 	using post_increment_t = int;
 
