@@ -3,6 +3,16 @@
 # Lore
 You are John Rambo and have been hired to rescue a little girl that has been taken hostage by an evil organization. The evil organization has sent out monsters in an attempt to stop you. Your job is to avoid the monster at all costs and save the hostage.
 
+# Control
+1. W - increase your velocity
+2. S - decrease your velocity
+3. A - turn left
+4. D - turn right
+5. Enter - start game
+
+# Gameplay
+Reach the hostage wihtout getting too close to the monsters, if you get too close to the monsters you lose. If you reach the hostage you win.
+
 # Images
 <img width="1198" alt="Screenshot 2024-05-04 at 10 40 41 PM" src="https://github.com/MatthewOsorio/CS381/assets/112652339/d78180a0-88e4-4b32-806b-475b28997f62">
 <img width="424" alt="Screenshot 2024-05-04 at 11 18 25 PM" src="https://github.com/MatthewOsorio/CS381/assets/112652339/ccee2392-b2e9-4e8b-aa7c-e15c7fb907ff">
