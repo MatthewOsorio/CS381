@@ -168,15 +168,6 @@ void Input(cs381::Scene<>& scene, cs381::Entity& selected, int value, char actio
 
 int main(){
     raylib:: Window window (1200, 900, "CS381 - AS9");
-    /*
-    raylib::Camera camera(
-        raylib::Vector3(0, 120, -500),
-        raylib::Vector3(0, 0, 300),
-        raylib::Vector3::Up(),
-        45.0f,
-        CAMERA_PERSPECTIVE
-    );
-    */
 
     raylib::Camera camera(
         raylib::Vector3(0, 120, -500),
@@ -185,8 +176,8 @@ int main(){
         45.0f,
         CAMERA_PERSPECTIVE
     );
+
     cs381::SkyBox skybox("textures/skybox.png");
-
     auto mesh = raylib::Mesh::Plane(10'000, 10'000, 50, 50,25);
     raylib::Model ground = ((raylib::Mesh*)&mesh) -> LoadModelFrom();
     raylib::Texture ashpalt("textures/Asphalt-Mixing-Plant.jpg");

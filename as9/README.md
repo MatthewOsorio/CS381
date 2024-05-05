@@ -1,7 +1,7 @@
 # Matthew Osorio AS9
 
 # Lore
-    You are John Rambo and have been hired to rescue a little girl that has been taken hostage by an evil organization. The evil organization has sent out monsters in an attempt to stop you. Your job is to avoid the monster at all costs and save the hostage.
+You are John Rambo and have been hired to rescue a little girl that has been taken hostage by an evil organization. The evil organization has sent out monsters in an attempt to stop you. Your job is to avoid the monster at all costs and save the hostage.
 
 # Images
 
