@@ -8,6 +8,5 @@ add_executable(as1 ${sources})
 target_link_libraries(as1 PUBLIC raylib raylib_cpp)
 set_property(TARGET as1 PROPERTY CXX_STANDARD 20)
 
-configure_file(meshes/PolyPlane.glb meshes/PolyPlane.glb COPYONLY)
-configure_file(meshes/SmitHouston_Tug.glb meshes/SmitHouston_Tug.glb COPYONLY)
+configure_file(meshes/little_girl.glb meshes/little_girl.glb COPYONLY)
 configure_file(meshes/john_rambo.glb meshes/john_rambo.glb COPYONLY)
