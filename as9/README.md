@@ -5,7 +5,8 @@ You are John Rambo and have been hired to rescue a little girl that has been tak
 
 # Images
 <img width="1198" alt="Screenshot 2024-05-04 at 10 40 41 PM" src="https://github.com/MatthewOsorio/CS381/assets/112652339/d78180a0-88e4-4b32-806b-475b28997f62">
-
+<img width="424" alt="Screenshot 2024-05-04 at 11 18 25 PM" src="https://github.com/MatthewOsorio/CS381/assets/112652339/ccee2392-b2e9-4e8b-aa7c-e15c7fb907ff">
+<img width="292" alt="Screenshot 2024-05-04 at 11 22 23 PM" src="https://github.com/MatthewOsorio/CS381/assets/112652339/c44f9e18-2f87-4254-bbae-a183f93b070b">
 
 # Description of criterion 
 
@@ -27,7 +28,8 @@ You are John Rambo and have been hired to rescue a little girl that has been tak
     - I created two new components called "ProximityComponent" and "EnemyComponent". In addition there are two new systems called "ProximitySystem" and "GameActiveSytem" that uses those components respectively.
 9. Read Me (with Pictures)
     - I added images of the game and its characters to the README.
-
+10. EC: Grade Yourself
+    - 100/100 excluding extra credit. 115/100 including extra credit.
 # How To Run Code
 
 ```
